@@ -498,7 +498,7 @@ export class ChromeLauncher {
     }
 
     const chromeProcess = spawn(chromePath, args, {
-      detached: true,
+      detached: false,
       stdio: ['ignore', 'ignore', 'pipe'],
       // shell: false is safe on all platforms; avoids cmd.exe injection risks on Windows
     });
@@ -515,9 +515,8 @@ export class ChromeLauncher {
     }
 
     chromeProcess.unref();
-    // Note: On Windows, detached processes create a new process group.
-    // Killing the root process may not clean up child processes (renderers, GPU).
-    // The oc_stop tool handles this via session/pool cleanup before process kill.
+    // Keep Chrome attached to the MCP process group so parent shutdown paths
+    // (tab close / SIGHUP / process termination) also terminate debug Chrome.
 
     // Log Chrome process exit for immediate diagnostics
     chromeProcess.once('exit', (code, signal) => {
